@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   BrowserRouter as Router,
@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import ChatRoom from "./ChatRoom";
+import ProtectedRoute from "./ProtectedRoute"; // Import ProtectedRoute
 
 const Login = ({ setToken, setEmail, setPassword, email, password }) => {
   const navigate = useNavigate();
@@ -60,13 +61,7 @@ const Login = ({ setToken, setEmail, setPassword, email, password }) => {
   );
 };
 
-const Register = ({
-  setIsRegister,
-  setEmail,
-  setPassword,
-  email,
-  password,
-}) => {
+const Register = ({ setEmail, setPassword, email, password }) => {
   const navigate = useNavigate();
 
   const handleRegister = async () => {
@@ -135,14 +130,18 @@ const Register = ({
   );
 };
 
-// const ChatRoom = () => {
-//   return <h1>Welcome to the Chat Room!</h1>;
-// };
-
 const App = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState(localStorage.getItem("token"));
+
+  useEffect(() => {
+    if (!token) {
+      console.log("User is not logged in.");
+    } else {
+      console.log("User is logged in with token:", token);
+    }
+  }, [token]);
 
   return (
     <Router>
@@ -173,17 +172,9 @@ const App = () => {
         <Route
           path="/chat"
           element={
-            token ? (
+            <ProtectedRoute>
               <ChatRoom />
-            ) : (
-              <Login
-                setToken={setToken}
-                setEmail={setEmail}
-                setPassword={setPassword}
-                email={email}
-                password={password}
-              />
-            )
+            </ProtectedRoute>
           }
         />
       </Routes>
