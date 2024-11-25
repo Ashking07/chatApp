@@ -1,70 +1,58 @@
-# Getting Started with Create React App
+Prototype 1: 17:55 24th Nov 2024
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Current implementation of The NodeChat, the process works as follows:
 
-## Available Scripts
+1. Message Flow Overview:
+   A user sends a message using the client-side interface.
+   The message is sent to the server using Socket.io.
+   Socket.io handles the real-time communication:
+   It broadcasts the message to all connected users in the same room.
+   This ensures that users see the message instantly on their screens.
+   Simultaneously, the server stores the message in data.js for persistence.
+2. Step-by-Step Breakdown:
+   (1) Client Sends a Message:
 
-In the project directory, you can run:
+The client uses:
+socket.emit("send-message", { roomId, message });
+This sends the message and roomId to the server over the WebSocket connection.
+(2) Server Processes the Message:
 
-### `npm start`
+On the server, the send-message event is handled:
+socket.on("send-message", ({ roomId, message }) => {
+// Create a new message object
+const newMessage = {
+sender: socket.user.userName,
+text: message,
+timestamp: new Date().toISOString(),
+};
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+// Find the room in the data or create a new one
+const room = data.messages.find((room) => room.roomId === roomId) || createRoom(roomId);
+room.chats.push(newMessage);
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+// Save the updated data to data.js for persistence
+fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
 
-### `npm test`
+// Broadcast the message to all users in the room
+io.to(roomId).emit("message", newMessage);
+});
+(3) Real-Time Update (Broadcast to All Users):
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The io.to(roomId).emit("message", newMessage) broadcasts the message to all connected users in the room.
+This ensures that users see the new message immediately.
+(4) Data Persistence:
 
-### `npm run build`
+The server then writes the message to data.js:
+fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
+This ensures that:
+Messages are not lost if the server restarts.
+Users joining the room later can view the chat history. 3. Key Points:
+Messages first appear on users’ screens in real-time via Socket.io.
+They are then stored in data.js for persistence.
+When a user joins a room, the server can fetch chat history from data.js and send it to the client for display. 4. Future Enhancements:
+Once we move to a database like MongoDB:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The process will be similar:
+Real-time updates via Socket.io.
+Data stored in the database instead of data.js.
+The chat history will be fetched from the database when needed, ensuring scalability and long-term storage.
