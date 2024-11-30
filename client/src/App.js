@@ -54,7 +54,7 @@ const Login = ({ setToken, setEmail, setPassword, email, password }) => {
             cursor: "pointer",
           }}
         >
-          Register here
+          Register here!
         </button>
       </p>
     </div>

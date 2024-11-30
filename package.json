@@ -1,0 +1,13 @@
+{
+  "name": "nodechat",
+  "version": "1.0.0",
+  "description": "Root package.json for orchestrating client and server",
+  "scripts": {
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:server": "nodemon server/index.js",
+    "start:client": "npm start --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0" 
+  }
+}

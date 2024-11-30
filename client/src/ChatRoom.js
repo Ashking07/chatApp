@@ -28,11 +28,41 @@ const ChatRoom = () => {
     };
   }, []);
 
-  const joinRoom = () => {
+  // const joinRoom = () => {
+  //   if (roomId && userName) {
+  //     console.log(`Joining room: ${roomId} as ${userName}`); // Debugging line
+  //     socket.emit("join-room", { roomId, userName });
+  //     setMessages([]); // Clear messages when joining a new room
+  //   }
+  // };
+
+  const joinRoom = async () => {
     if (roomId && userName) {
       console.log(`Joining room: ${roomId} as ${userName}`); // Debugging line
+
+      // Emit join-room event to the server
       socket.emit("join-room", { roomId, userName });
-      setMessages([]); // Clear messages when joining a new room
+
+      try {
+        // Fetch chat history for the room from the server
+        const response = await fetch(
+          `http://localhost:8080/api/messages/${roomId}`
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch messages for room ${roomId}`);
+        }
+
+        const roomData = await response.json();
+
+        // Update the messages state with the fetched chat history
+        if (roomData && roomData.chats) {
+          setMessages(roomData.chats);
+        } else {
+          console.warn("No chat history found for this room.");
+        }
+      } catch (err) {
+        console.error("Error fetching room messages:", err);
+      }
     }
   };
 
@@ -66,8 +96,8 @@ const ChatRoom = () => {
         <ul>
           {messages.map((msg, idx) => (
             <li key={idx}>
-              <strong>{msg.userName || "Unknown"}:</strong>{" "}
-              {msg.message || "No message"}
+              <strong>{msg.sender || "Unknown"}:</strong>{" "}
+              {msg.message || msg.text || "No message"}
             </li>
           ))}
         </ul>
